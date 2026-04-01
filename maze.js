@@ -1,4 +1,4 @@
-function generateSquareMaze(dimension) {
+function generateSquareMaze(dimension, extraPassageRatio) {
 
     function iterate(field, x, y) {
         field[x][y] = false;
@@ -37,6 +37,42 @@ function generateSquareMaze(dimension) {
 
     // Generate the maze recursively.
     field = iterate(field, 1, 1);
+
+    // Add extra passages to create loops and multiple paths
+    extraPassageRatio = extraPassageRatio || 0;
+    if (extraPassageRatio > 0) {
+        var candidates = [];
+        for (var i = 1; i < dimension - 1; i++) {
+            for (var j = 1; j < dimension - 1; j++) {
+                if (field[i][j] !== true) { continue; }
+                // Horizontal wall between two open cells
+                if (i % 2 === 0 && j % 2 === 1) {
+                    if (!field[i - 1][j] && !field[i + 1][j]) {
+                        candidates.push([i, j]);
+                    }
+                }
+                // Vertical wall between two open cells
+                if (i % 2 === 1 && j % 2 === 0) {
+                    if (!field[i][j - 1] && !field[i][j + 1]) {
+                        candidates.push([i, j]);
+                    }
+                }
+            }
+        }
+
+        // Fisher-Yates shuffle
+        for (var k = candidates.length - 1; k > 0; k--) {
+            var r = Math.floor(Math.random() * (k + 1));
+            var tmp = candidates[k];
+            candidates[k] = candidates[r];
+            candidates[r] = tmp;
+        }
+
+        var toRemove = Math.floor(candidates.length * extraPassageRatio);
+        for (var k = 0; k < toRemove; k++) {
+            field[candidates[k][0]][candidates[k][1]] = false;
+        }
+    }
 
     return field;
 }
